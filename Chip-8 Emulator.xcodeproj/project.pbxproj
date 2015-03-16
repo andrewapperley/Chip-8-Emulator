@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0FD2D1771AB63E0100577539 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0FD2D1761AB63E0100577539 /* main.c */; };
+		0FD2D17F1AB63E4E00577539 /* cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 0FD2D17D1AB63E4E00577539 /* cpu.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,11 @@
 /* Begin PBXFileReference section */
 		0FD2D1731AB63E0100577539 /* Chip-8 Emulator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Chip-8 Emulator"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FD2D1761AB63E0100577539 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		0FD2D17D1AB63E4E00577539 /* cpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cpu.c; sourceTree = "<group>"; };
+		0FD2D17E1AB63E4E00577539 /* cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cpu.h; sourceTree = "<group>"; };
+		0FD2D1801AB64CAA00577539 /* invaders.c8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = invaders.c8; sourceTree = "<group>"; };
+		0FD2D1811AB64CAA00577539 /* pong.c8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = pong.c8; sourceTree = "<group>"; };
+		0FD2D1821AB64CAA00577539 /* tetris.c8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = tetris.c8; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +63,11 @@
 		0FD2D1751AB63E0100577539 /* Chip-8 Emulator */ = {
 			isa = PBXGroup;
 			children = (
+				0FD2D1801AB64CAA00577539 /* invaders.c8 */,
+				0FD2D1811AB64CAA00577539 /* pong.c8 */,
+				0FD2D1821AB64CAA00577539 /* tetris.c8 */,
+				0FD2D17D1AB63E4E00577539 /* cpu.c */,
+				0FD2D17E1AB63E4E00577539 /* cpu.h */,
 				0FD2D1761AB63E0100577539 /* main.c */,
 			);
 			path = "Chip-8 Emulator";
@@ -118,6 +129,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FD2D17F1AB63E4E00577539 /* cpu.c in Sources */,
 				0FD2D1771AB63E0100577539 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
