@@ -13,7 +13,7 @@
 
 int main(int argc, const char * argv[]) {
     
-    char *romName = "pong.c8";
+    char *romName = "invaders.c8";
 //    char *fullPath = (char *)malloc(sizeof(argv[0])+sizeof(romName));
 //    strcpy(fullPath, argv[0]);
 //    strcat(fullPath, romName);

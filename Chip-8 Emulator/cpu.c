@@ -185,24 +185,34 @@ void runCycle() {
                     
                 case 0x0005: // VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
                     if (V[(opcode & 0x0F00) >> 8] - V[(opcode & 0x00F0) >> 4] < 0) {
-                        V[0xF] = 0;
+                        V[0xF/*15*/] = 0;
                     } else {
-                        V[0xF] = 1;
+                        V[0xF/*15*/] = 1;
                     }
                     V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
                     pc += 2;
                     break;
                     
                 case 0x0006: // Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
-                    
+                    V[0xF/*15*/] = (V[(opcode & 0x0F00) >> 8] & 0x1);
+                    V[(opcode & 0x0F00) >> 8] >>= 1;
+                    pc += 2;
                     break;
                     
                 case 0x0007: // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-                    
+                    if (V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8] < 0) {
+                        V[0xF/*15*/] = 0;
+                    } else {
+                        V[0xF/*15*/] = 1;
+                    }
+                    V[(opcode & 0x00F0) >> 4] -= V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                     break;
                     
                 case 0x000E: // Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
-                    
+                    V[0xF/*15*/] = (V[(opcode & 0x0F00) >> 8] >> 7);
+                    V[(opcode & 0x0F00) >> 8] <<= 1;
+                    pc += 2;
                     break;
                     
                 default:
@@ -212,6 +222,12 @@ void runCycle() {
             break;
             
         case 0x9000: // Skips the next instruction if VX doesn't equal VY.
+            if (V[(opcode & 0x0F00) >> 8] != V[(opcode & 0x00F0) >> 8]) {
+                pc += 4;
+            } else {
+                pc += 2;
+            }
+
             break;
             
         case 0xA000: // Sets I to the address NNN
@@ -220,22 +236,64 @@ void runCycle() {
             break;
             
         case 0xB000: // Jumps to the address NNN plus V0.
+            pc = (opcode & 0x0FFF) + V[0x0];
             break;
             
         case 0xC000: // Sets VX to a random number, masked by NN.
+            V[(opcode & 0x0F00) >> 8] = rand() & (opcode & 0x00FF); // I think this is correct
+            pc += 2;
             break;
             
-        case 0xD000: // Sprites stored in memory at location in index register (I), maximum 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (i.e. it toggles the screen pixels)
+        case 0xD000: { // Sprites stored in memory at location in index register (I), maximum 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (i.e. it toggles the screen pixels)
+            unsigned short x = V[(opcode & 0x0F00) >> 8];
+            unsigned short y = V[(opcode & 0x00F0) >> 4];
+            unsigned short height = opcode & 0x000F;
+            unsigned short pixel;
+            unsigned short line;
+            
+            V[0xF/*15*/] = 0;
+            for (int _y = 0; _y < height; _y++) {
+                line = memory[I + _y];
+                for (int _x = 0; _x < 8; _x++) {
+                    pixel = line & (0x80 >> _x);
+                    if (pixel != 0) {
+                        
+                        unsigned short index = ((x + _x) + (y + _y) * 64);
+                        
+                        if (gfx[index] == 1) {
+                            V[0xF/*15*/] = 1;
+                        }
+                        
+                        if (index <= sizeof(gfx)) {
+                            gfx[index] ^= 1; // This seems to have issues so I'll check that out later
+                        }
+                        
+                    }
+                }
+            }
+            
+            draw = true;
+            pc += 2;
             break;
+        }
             
         case 0xE000:
             
             switch (opcode & 0x000F) {
                 case 0x000E: // Skips the next instruction if the key stored in VX is pressed.
-                    
+                    if (key[V[(opcode & 0x0F00) >> 8]] == 1) {
+                        pc += 4;
+                    } else {
+                        pc += 2;
+                    }
                     break;
                     
                 case 0x0001: // Skips the next instruction if the key stored in VX isn't pressed.
+                    if (key[V[(opcode & 0x0F00) >> 8]] == 0) {
+                        pc += 4;
+                    } else {
+                        pc += 2;
+                    }
                     break;
                     
                 default:
@@ -247,24 +305,30 @@ void runCycle() {
         case 0xF000:
             switch (opcode & 0x000F) {
                 case 0x0007: // Sets VX to the value of the delay timer.
-                    
+                    V[(opcode & 0x0F00) >> 8] = delayTimer;
+                    pc += 2;
                     break;
                     
                 case 0x000A: // A key press is awaited, and then stored in VX.
+//                    Do I simply add the value now or wait for a key press....also which key press...any?
+                    pc += 2;
                     break;
                     
                 case 0x0005:
                     switch (opcode & 0x00F0) {
                         case 0x0010: // Sets the delay timer to VX.
-                            
+                            delayTimer = V[(opcode & 0x0F00) >> 8];
+                            pc += 2;
                             break;
                             
                         case 0x0050: // Stores V0 to VX in memory starting at address I.
                             
+                            pc += 2;
                             break;
                             
-                        case 0x0060: // Fills V0 to VX with values from memory starting at address I.[
+                        case 0x0060: // Fills V0 to VX with values from memory starting at address I.
                             
+                            pc += 2;
                             break;
                             
                         default:
@@ -274,15 +338,20 @@ void runCycle() {
                     break;
                     
                 case 0x0008: // Sets the sound timer to VX.
+                    soundTimer = V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                     break;
                     
                 case 0x000E: // Adds VX to I.
+                    pc += 2;
                     break;
                     
                 case 0x0009: // Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                    pc += 2;
                     break;
                     
                 case 0x0003: // Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
+                    pc += 2;
                     break;
                     
                 default:
@@ -314,6 +383,17 @@ void setKeys() {
 }
 
 void drawGraphics() {
+    int count = 0;
+    int i = 0;
+    printf("\n");
+    while (count < 2048) {
+        printf("%d", gfx[count++]);
+        i++;
+        if (i >= 64) {
+            i = 0;
+            printf("\n");
+        }
+    }
     
     draw = false;
 }
