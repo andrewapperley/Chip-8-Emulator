@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 bool draw = false;
+bool exWait = false;
 bool shutDown = false;
 
 unsigned short opcode;
@@ -24,6 +25,8 @@ unsigned char soundTimer;
 unsigned short stack[16];
 unsigned short sp;
 unsigned char key[16];
+
+SDL_Renderer *screenRenderer;
 
 unsigned char chip8_fontset[80] =
 {
@@ -60,6 +63,21 @@ void initialize() {
         memory[i] = chip8_fontset[i];
     }
     
+}
+
+void initializeGraphics() {
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        printf("SDL_Init error\n");
+        exit(-1);
+    } else {
+        printf("SDL_Init Success\n");
+        
+        SDL_Window *screen;
+        SDL_CreateWindowAndRenderer(640, 320, SDL_WINDOW_OPENGL, &screen, &screenRenderer);
+        SDL_SetRenderDrawColor(screenRenderer, 0, 0, 0, 255);
+        SDL_RenderClear(screenRenderer);
+        SDL_RenderPresent(screenRenderer);
+    }
 }
 
 void loadROM(const char *romName) {
@@ -231,7 +249,7 @@ void runCycle() {
             break;
             
         case 0xA000: // Sets I to the address NNN
-            I = opcode & 0x0FFF;
+            I = (opcode & 0x0FFF);
             pc += 2;
             break;
             
@@ -274,8 +292,8 @@ void runCycle() {
             
             draw = true;
             pc += 2;
-            break;
         }
+        break;
             
         case 0xE000:
             
@@ -311,6 +329,8 @@ void runCycle() {
                     
                 case 0x000A: // A key press is awaited, and then stored in VX.
 //                    Do I simply add the value now or wait for a key press....also which key press...any?
+                    exWait = true;
+                    printf("NOT IMPLEMENTED: 0x%X\n", opcode);
                     pc += 2;
                     break;
                     
@@ -321,15 +341,33 @@ void runCycle() {
                             pc += 2;
                             break;
                             
-                        case 0x0050: // Stores V0 to VX in memory starting at address I.
+                        case 0x0050: { // Stores V0 to VX in memory starting at address I.
+                             printf("NOT IMPLEMENTED: 0x%X\n", opcode);
+//                            break;
+                            int _i = 0;
+                            for (int i = V[0x0]; i < (V[(opcode & 0x0F00) >> 8] - V[0x0]); i++) {
+                                memory[I + _i] = V[i];
+                                _i++;
+                            }
                             
+                            I = I + V[(opcode & 0x0F00) >> 8] + 1;
                             pc += 2;
                             break;
+                        }
                             
-                        case 0x0060: // Fills V0 to VX with values from memory starting at address I.
+                        case 0x0060: { // Fills V0 to VX with values from memory starting at address I.
+                             printf("NOT IMPLEMENTED: 0x%X\n", opcode);
+//                            break;
+                            int _i = 0;
+                            for (int i = I; i < (V[(opcode & 0x0F00) >> 8] - V[0x0]); i++) {
+                                memory[I + _i] = V[i];
+                                _i++;
+                            }
                             
+                            I = I + V[(opcode & 0x0F00) >> 8] + 1;
                             pc += 2;
                             break;
+                        }
                             
                         default:
                             printf("Unknown opcode: 0x%X\n", opcode);
@@ -343,14 +381,19 @@ void runCycle() {
                     break;
                     
                 case 0x000E: // Adds VX to I.
+                    I += V[(opcode & 0x0F00) >> 8];
                     pc += 2;
                     break;
                     
                 case 0x0009: // Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                    I = V[(opcode & 0x0F00) >> 8];
                     pc += 2;
                     break;
                     
                 case 0x0003: // Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
+                    memory[I]     = V[(opcode & 0x0F00) >> 8] / 100;
+                    memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
+                    memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
                     pc += 2;
                     break;
                     
@@ -379,21 +422,23 @@ void runCycle() {
 }
 
 void setKeys() {
-    
+    exWait = false;
 }
 
 void drawGraphics() {
-    int count = 0;
-    int i = 0;
-    printf("\n");
-    while (count < 2048) {
-        printf("%d", gfx[count++]);
-        i++;
-        if (i >= 64) {
-            i = 0;
-            printf("\n");
+    SDL_RenderClear(screenRenderer);
+    for (int i = 0; i < sizeof(gfx); i++) {
+        if (gfx[i] == 1) {
+            SDL_SetRenderDrawColor(screenRenderer, 255, 255, 255, 255);
+        } else {
+            SDL_SetRenderDrawColor(screenRenderer, 0, 0, 0, 255);
         }
+        int x = (i % 64);
+        int y = (int)floor(i / 64);
+        
+        SDL_Rect rect = {x * 10, y * 10, 10, 10};
+        SDL_RenderFillRect(screenRenderer, &rect);
     }
-    
+    SDL_RenderPresent(screenRenderer);
     draw = false;
 }

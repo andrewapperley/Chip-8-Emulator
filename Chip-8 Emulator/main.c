@@ -13,19 +13,23 @@
 
 int main(int argc, const char * argv[]) {
     
-    char *romName = "invaders.c8";
+    char *romName = "./games/PONG";
 //    char *fullPath = (char *)malloc(sizeof(argv[0])+sizeof(romName));
 //    strcpy(fullPath, argv[0]);
 //    strcat(fullPath, romName);
     initialize();
+    initializeGraphics();
     loadROM(romName);
     
     while (!shutDown) {
-        runCycle();
-        
-        if (draw) {
-            drawGraphics();
+        if (!exWait) {
+            runCycle();
+            if (draw) {
+                drawGraphics();
+            }
         }
+        
+        
         
         setKeys();
     }

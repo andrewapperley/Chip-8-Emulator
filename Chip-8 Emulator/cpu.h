@@ -11,11 +11,14 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <SDL2/SDL.h>
 
 extern bool draw;
+extern bool exWait;
 extern bool shutDown;
 
 void initialize();
+void initializeGraphics();
 void loadROM(const char *romName);
 void runCycle();
 void setKeys();
