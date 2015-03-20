@@ -471,7 +471,7 @@ void setKeys() {
             
             case SDL_QUIT:
                 SDL_Quit();
-                exit(0);
+                shutDown = true;
                 break;
                 
             default:
