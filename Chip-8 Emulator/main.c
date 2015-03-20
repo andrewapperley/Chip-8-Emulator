@@ -22,15 +22,10 @@ int main(int argc, const char * argv[]) {
     loadROM(romName);
     
     while (!shutDown) {
-        if (!exWait) {
-            runCycle();
-            if (draw) {
-                drawGraphics();
-            }
+        runCycle();
+        if (draw) {
+            drawGraphics();
         }
-        
-        
-        
         setKeys();
     }
     

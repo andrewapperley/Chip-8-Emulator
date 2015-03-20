@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>88263F34-4740-467B-8D8B-586470F5559D</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Chip-8 Emulator</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>4FF82164511A0E2F02842292D266787713CE5527</key>
+		<string>https://bitbucket.org/andrewapperley1/chip-8-emulator.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Chip-8 Emulator.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>4FF82164511A0E2F02842292D266787713CE5527</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://bitbucket.org/andrewapperley1/chip-8-emulator.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>4FF82164511A0E2F02842292D266787713CE5527</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4FF82164511A0E2F02842292D266787713CE5527</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Chip-8%20Emulator</string>
+		</dict>
+	</array>
+</dict>
+</plist>

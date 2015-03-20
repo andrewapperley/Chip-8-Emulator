@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 bool draw = false;
-bool exWait = false;
 bool shutDown = false;
 
 unsigned short opcode;
@@ -54,10 +53,14 @@ void initialize() {
     I = 0;
     sp = 0;
     
+    delayTimer = 0;
+    soundTimer = 0;
+    
     memset(gfx, 0, sizeof(gfx));
     memset(V, 0, sizeof(V));
     memset(stack, 0, sizeof(stack));
     memset(memory, 0, sizeof(memory));
+    memset(key, 0, sizeof(key));
     
     for(int i = 0; i < sizeof(chip8_fontset); ++i) {
         memory[i] = chip8_fontset[i];
@@ -115,8 +118,8 @@ void runCycle() {
                 break;
                 
             case 0x000E: // Returns from subroutine
-                    pc = stack[sp];
                     sp--;
+                    pc = stack[sp];
                     pc += 2;
                 break;
                 
@@ -165,7 +168,7 @@ void runCycle() {
             break;
             
         case 0x7000: // Adds NN to VX.
-            V[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
+            V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x0F00) >> 8] + (opcode & 0x00FF)) & 0xFF;
             pc += 2;
             break;
             
@@ -202,10 +205,10 @@ void runCycle() {
                     break;
                     
                 case 0x0005: // VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-                    if (V[(opcode & 0x0F00) >> 8] - V[(opcode & 0x00F0) >> 4] < 0) {
-                        V[0xF/*15*/] = 0;
-                    } else {
+                    if (V[(opcode & 0x0F00) >> 8] > V[(opcode & 0x00F0) >> 4]) {
                         V[0xF/*15*/] = 1;
+                    } else {
+                        V[0xF/*15*/] = 0;
                     }
                     V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
                     pc += 2;
@@ -218,10 +221,10 @@ void runCycle() {
                     break;
                     
                 case 0x0007: // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-                    if (V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8] < 0) {
-                        V[0xF/*15*/] = 0;
-                    } else {
+                    if (V[(opcode & 0x00F0) >> 4] > V[(opcode & 0x0F00) >> 8]) {
                         V[0xF/*15*/] = 1;
+                    } else {
+                        V[0xF/*15*/] = 0;
                     }
                     V[(opcode & 0x00F0) >> 4] -= V[(opcode & 0x0F00) >> 8];
                     pc += 2;
@@ -257,10 +260,11 @@ void runCycle() {
             pc = (opcode & 0x0FFF) + V[0x0];
             break;
             
-        case 0xC000: // Sets VX to a random number, masked by NN.
-            V[(opcode & 0x0F00) >> 8] = rand() & (opcode & 0x00FF); // I think this is correct
+        case 0xC000: { // Sets VX to a random number, masked by NN.
+            V[(opcode & 0x0F00) >> 8] = random() & (opcode & 0x00FF); // I think this is correct
             pc += 2;
             break;
+        }
             
         case 0xD000: { // Sprites stored in memory at location in index register (I), maximum 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (i.e. it toggles the screen pixels)
             unsigned short x = V[(opcode & 0x0F00) >> 8];
@@ -283,7 +287,7 @@ void runCycle() {
                         }
                         
                         if (index <= sizeof(gfx)) {
-                            gfx[index] ^= 1; // This seems to have issues so I'll check that out later
+                            gfx[index] ^= 1;
                         }
                         
                     }
@@ -328,10 +332,14 @@ void runCycle() {
                     break;
                     
                 case 0x000A: // A key press is awaited, and then stored in VX.
-//                    Do I simply add the value now or wait for a key press....also which key press...any?
-                    exWait = true;
+                    
                     printf("NOT IMPLEMENTED: 0x%X\n", opcode);
-                    pc += 2;
+                    for (int i = 0; i < sizeof(key); i++) {
+                        if (key[i] == 1) {
+                            V[(opcode & 0x0F00) >> 8] = key[i];
+                            pc += 2;
+                        }
+                    }
                     break;
                     
                 case 0x0005:
@@ -356,14 +364,10 @@ void runCycle() {
                         }
                             
                         case 0x0060: { // Fills V0 to VX with values from memory starting at address I.
-                             printf("NOT IMPLEMENTED: 0x%X\n", opcode);
-//                            break;
-                            int _i = 0;
-                            for (int i = I; i < (V[(opcode & 0x0F00) >> 8] - V[0x0]); i++) {
-                                memory[I + _i] = V[i];
-                                _i++;
+                            for (int i = 0; i < V[(opcode & 0x0F00) >> 8]; i++) {
+                                V[i] = memory[I + i];
                             }
-                            
+
                             I = I + V[(opcode & 0x0F00) >> 8] + 1;
                             pc += 2;
                             break;
@@ -422,7 +426,58 @@ void runCycle() {
 }
 
 void setKeys() {
-    exWait = false;
+    SDL_Event event;
+    while( SDL_PollEvent( &event ) ){
+        /* We are only worried about SDL_KEYDOWN, SDL_KEYUP, and SDL_QUIT events */
+        switch( event.type ){
+            case SDL_KEYDOWN:
+                switch( event.key.keysym.sym ){
+                    case SDLK_LEFT:
+                        
+                        break;
+                    case SDLK_RIGHT:
+
+                        break;
+                    case SDLK_UP:
+                        
+                        break;
+                    case SDLK_DOWN:
+                        
+                        break;
+                    default:
+                        break;
+                }
+                break;
+                
+            case SDL_KEYUP:
+                switch( event.key.keysym.sym ){
+                    case SDLK_LEFT:
+                        
+                        break;
+                    case SDLK_RIGHT:
+                        
+                        break;
+                    case SDLK_UP:
+                        
+                        break;
+                    case SDLK_DOWN:
+                        
+                        break;
+                    default:
+                        break;
+                }
+
+                break;
+            
+            case SDL_QUIT:
+                SDL_Quit();
+                exit(0);
+                break;
+                
+            default:
+                break;
+        }
+    }
 }
 
 void drawGraphics() {

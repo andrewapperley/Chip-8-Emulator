@@ -14,7 +14,6 @@
 #include <SDL2/SDL.h>
 
 extern bool draw;
-extern bool exWait;
 extern bool shutDown;
 
 void initialize();
